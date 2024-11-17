@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        input[type="text"]::placeholder,
+        input[type="number"]::placeholder,
+        input[type="date"]::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid #4caf50;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .danger {
+            background-color: #f44336;
+        }
+
+        .danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Gestión de Empleados</h2>
+
+        <!-- Buscar por ID -->
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="searchId">Buscar Empleado por ID</label>
+                <input type="number" id="searchId" placeholder="Introduce el ID del empleado" required>
+            </div>
+            <button type="submit">Buscar</button>
+        </form>
+
+        <!-- Formulario de detalles del empleado -->
+        <form id="employeeForm" style="display: none;">
+            <h3>Detalles del Empleado</h3>
+            <input type="hidden" id="employeeId">
+            <div class="form-group">
+                <label for="firstName">Nombre</label>
+                <input type="text" id="firstName" required>
+            </div>
+            <div class="form-group">
+                <label for="lastName">Apellido</label>
+                <input type="text" id="lastName" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Teléfono</label>
+                <input type="text" id="phoneNumber" required>
+            </div>
+            <div class="form-group">
+                <label for="hireDate">Fecha de Contratación</label>
+                <input type="date" id="hireDate" required>
+            </div>
+            <div class="form-group">
+                <label for="jobId">ID del Puesto</label>
+                <input type="text" id="jobId" required>
+            </div>
+            <div class="form-group">
+                <label for="salary">Salario</label>
+                <input type="number" id="salary" required>
+            </div>
+            <div class="form-group">
+                <label for="commissionPct">Comisión (%)</label>
+                <input type="number" id="commissionPct">
+            </div>
+            <div class="form-group">
+                <label for="managerId">ID del Gerente</label>
+                <input type="text" id="managerId">
+            </div>
+            <div class="form-group">
+                <label for="departmentId">ID del Departamento</label>
+                <input type="text" id="departmentId">
+            </div>
+            <button type="button" id="updateButton">Actualizar</button>
+            <button type="button" id="deleteButton" class="danger">Eliminar</button>
+        </form>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token'); // Recupera el token almacenado
+
+        // Manejo del formulario de búsqueda
+        document.getElementById('searchForm').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const id = document.getElementById('searchId').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employees/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('employeeForm').style.display = 'block';
+                    document.getElementById('employeeId').value = id;
+                    document.getElementById('firstName').value = data.first_name;
+                    document.getElementById('lastName').value = data.last_name;
+                    document.getElementById('email').value = data.email;
+                    document.getElementById('phoneNumber').value = data.phone_number;
+                    document.getElementById('hireDate').value = data.hire_date.split('T')[0];
+                    document.getElementById('jobId').value = data.job_id;
+                    document.getElementById('salary').value = data.salary;
+                    document.getElementById('commissionPct').value = data.commission_pct || '';
+                    document.getElementById('managerId').value = data.manager_id || '';
+                    document.getElementById('departmentId').value = data.department_id || '';
+                } else {
+                    document.getElementById('message').innerText = data.error || 'Empleado no encontrado';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Manejo del botón de actualizar
+        document.getElementById('updateButton').addEventListener('click', async() => {
+            if (!confirm('¿Estás seguro de actualizar los datos del empleado?')) return;
+
+            const id = document.getElementById('employeeId').value;
+            const body = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone_number: document.getElementById('phoneNumber').value,
+                hire_date: document.getElementById('hireDate').value,
+                job_id: document.getElementById('jobId').value,
+                salary: document.getElementById('salary').value,
+                commission_pct: document.getElementById('commissionPct').value,
+                manager_id: document.getElementById('managerId').value,
+                department_id: document.getElementById('departmentId').value,
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employees/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                const data = await response.json();
+                document.getElementById('message').innerText = data.message || data.error;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Manejo del botón de eliminar
+        document.getElementById('deleteButton').addEventListener('click', async() => {
+            if (!confirm('¿Estás seguro de eliminar este empleado?')) return;
+
+            const id = document.getElementById('employeeId').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employees/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
+
+                const data = await response.json();
+                document.getElementById('message').innerText = data.message || data.error;
+
+                if (response.ok) {
+                    document.getElementById('employeeForm').reset();
+                    document.getElementById('employeeForm').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>
